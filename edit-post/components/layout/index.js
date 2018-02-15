@@ -24,6 +24,7 @@ import {
 import './style.scss';
 import Header from '../header';
 import Sidebar from '../sidebar';
+import PreserveScrollInReorder from '../preserve-scroll-in-reorder';
 import TextEditor from '../modes/text-editor';
 import VisualEditor from '../modes/visual-editor';
 import EditorModeKeyboardShortcuts from '../modes/keyboard-shortcuts';
@@ -56,6 +57,7 @@ function Layout( {
 			<Header />
 			<div className="edit-post-layout__content" role="region" aria-label={ __( 'Editor content' ) } tabIndex="-1">
 				<EditorNotices />
+				<PreserveScrollInReorder />
 				<div className="edit-post-layout__editor">
 					<EditorModeKeyboardShortcuts />
 					{ mode === 'text' && <TextEditor /> }

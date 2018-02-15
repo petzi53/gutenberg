@@ -25,7 +25,6 @@ import { __, sprintf } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import { getScrollContainer } from '../../utils/dom';
 import BlockMover from '../block-mover';
 import BlockDropZone from '../block-drop-zone';
 import BlockSettingsMenu from '../block-settings-menu';
@@ -93,8 +92,6 @@ export class BlockListBlock extends Component {
 		this.onClick = this.onClick.bind( this );
 		this.selectOnOpen = this.selectOnOpen.bind( this );
 		this.onSelectionChange = this.onSelectionChange.bind( this );
-
-		this.previousOffset = null;
 		this.hadTouchStart = false;
 
 		this.state = {
@@ -127,28 +124,7 @@ export class BlockListBlock extends Component {
 		document.addEventListener( 'selectionchange', this.onSelectionChange );
 	}
 
-	componentWillReceiveProps( newProps ) {
-		if (
-			this.props.order !== newProps.order &&
-			( newProps.isSelected || newProps.isFirstMultiSelected )
-		) {
-			this.previousOffset = this.node.getBoundingClientRect().top;
-		}
-	}
-
 	componentDidUpdate( prevProps ) {
-		// Preserve scroll prosition when block rearranged
-		if ( this.previousOffset ) {
-			const scrollContainer = getScrollContainer( this.node );
-			if ( scrollContainer ) {
-				scrollContainer.scrollTop = scrollContainer.scrollTop +
-					this.node.getBoundingClientRect().top -
-					this.previousOffset;
-			}
-
-			this.previousOffset = null;
-		}
-
 		// Bind or unbind mousemove from page when user starts or stops typing
 		if ( this.props.isTyping !== prevProps.isTyping ) {
 			if ( this.props.isTyping ) {

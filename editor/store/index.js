@@ -10,7 +10,9 @@ import reducer from './reducer';
 import applyMiddlewares from './middlewares';
 import {
 	getBlockCount,
+	getBlockOrder,
 	getBlocks,
+	getBlockSelectionStart,
 	getEditedPostAttribute,
 	getLastMultiSelectedBlockUid,
 	getSelectedBlockCount,
@@ -29,7 +31,9 @@ loadAndPersist( store, reducer, 'preferences', STORAGE_KEY );
 
 registerSelectors( MODULE_KEY, {
 	getBlockCount,
+	getBlockOrder,
 	getBlocks,
+	getBlockSelectionStart,
 	getEditedPostAttribute,
 	getLastMultiSelectedBlockUid,
 	getSelectedBlockCount,
