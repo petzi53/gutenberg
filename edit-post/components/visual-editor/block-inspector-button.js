@@ -13,8 +13,8 @@ import { IconButton, withSpokenMessages } from '@wordpress/components';
 /**
  * Internal dependencies
  */
-import { getActivePanel, isSidebarOpened } from '../../../store/selectors';
-import { toggleSidebar, setActivePanel } from '../../../store/actions';
+import { getActivePanel, isSidebarOpened } from '../../store/selectors';
+import { toggleSidebar, setActivePanel } from '../../store/actions';
 
 export function BlockInspectorButton( {
 	isDefaultSidebarOpened,
