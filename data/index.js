@@ -3,7 +3,7 @@
  */
 import isEqualShallow from 'is-equal-shallow';
 import { createStore } from 'redux';
-import { flowRight, without, mapValues } from 'lodash';
+import { flowRight, without, mapValues, castArray } from 'lodash';
 
 /**
  * WordPress dependencies
@@ -23,6 +23,37 @@ const stores = {};
 const selectors = {};
 const actions = {};
 let listeners = [];
+
+/**
+ * Higher-order function creator to create a function which invokes ifTrueFn
+ * only if the given predicate returns a truthy value.
+ *
+ * @param {Function} predicate Predicate test.
+ *
+ * @see http://ramdajs.com/docs/#when
+ *
+ * @return {Function} Higher-order function to call with ifTrueFn.
+ */
+const when = ( predicate ) => ( ifTrueFn ) => ( ...args ) => {
+	if ( predicate() ) {
+		ifTrueFn( ...args );
+	}
+};
+
+/**
+ * Higher-order function creator to create a function which invokes ifTrueFn
+ * only if the given predicate returns a truthy value, with the result.
+ *
+ * @param {Function} predicate Predicate test returning tuple of isTrue, result
+ *
+ * @return {Function} Higher-order function to call with ifTrueFn.
+ */
+const whenWith = ( predicate ) => ( ifTrueFn ) => () => {
+	const [ isTrue, result ] = predicate();
+	if ( isTrue ) {
+		ifTrueFn( result );
+	}
+};
 
 /**
  * Global listener called for each store's update.
@@ -106,18 +137,67 @@ export function registerActions( reducerKey, newActions ) {
 }
 
 /**
- * Subscribe to changes to any data.
+ * Subscribe to changes to any data, optionally filtering by reducer or
+ * selector result.
  *
- * @param {Function}   listener Listener function.
+ * @param {?string}            reducerKey Reducer key.
+ * @param {?(string|string[])} selector   Selector name or array of selector
+ *                                        name with arguments to pass.
+ * @param {Function}           listener   Listener callback.
  *
- * @return {Function}           Unsubscribe function.
+ * @return {Function} Unsubscribe function.
  */
-export const subscribe = ( listener ) => {
-	listeners.push( listener );
+export const subscribe = ( ...args ) => {
+	// Listener will always be the last argument but can be optionally preceded
+	// by reducer key and selector. Normalize to three arguments, adding empty
+	// values prior to the last (listener) argument to capture supported cases:
+	//
+	// - listener
+	// - reducerKey, listener
+	// - reducerKey, selector, listener
+	while ( args.length < 3 ) {
+		args.splice( -1, 0, null );
+	}
+	// eslint-disable-next-line prefer-const
+	let [ reducerKey, selector, listener ] = args;
 
-	return () => {
+	if ( reducerKey ) {
+		// When filtering by reducer key, only invoke listener when state for
+		// given reducer key changes.
+		const getState = stores[ reducerKey ].getState;
+		let lastState = getState();
+		listener = when( () => {
+			const state = getState();
+			const isOk = state !== lastState;
+			lastState = state;
+			return isOk;
+		} )( listener );
+
+		if ( selector ) {
+			// Further, when filtering by selector, only invoke listener when
+			// result for given selector changes.
+
+			// Normalize selector string to array where first entry is selector
+			// name, remainder as arguments to pass to selector.
+			const [ selectorName, ...selectorArgs ] = castArray( selector );
+
+			const getResult = () => selectors[ reducerKey ][ selectorName ]( ...selectorArgs );
+			let lastResult = getResult();
+			listener = whenWith( () => {
+				const result = getResult();
+				const isOk = result !== lastResult;
+				lastResult = result;
+				return [ isOk, result ];
+			} )( listener );
+		}
+	}
+
+	listeners.push( listener );
+	const unsubscribe = () => {
 		listeners = without( listeners, listener );
 	};
+
+	return unsubscribe;
 };
 
 /**

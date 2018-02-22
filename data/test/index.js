@@ -267,6 +267,71 @@ describe( 'subscribe', () => {
 
 		expect( incrementedValue ).toBe( 3 );
 	} );
+
+	it( 'subscribes to specific reducer', () => {
+		registerStore( 'one', {
+			reducer: ( state = 0 ) => state + 1,
+			actions: { increment: () => ( { type: 'increment' } ) },
+		} );
+		registerStore( 'two', {
+			reducer: ( state = 0 ) => state + 1,
+			actions: { increment: () => ( { type: 'increment' } ) },
+		} );
+
+		const oneCallback = jest.fn();
+		const twoCallback = jest.fn();
+
+		const oneUnsubscribe = subscribe( 'one', oneCallback );
+		const twoUnsubscribe = subscribe( 'two', twoCallback );
+
+		dispatch( 'one' ).increment();
+
+		expect( oneCallback ).toHaveBeenCalled();
+		expect( twoCallback ).not.toHaveBeenCalled();
+
+		oneUnsubscribe();
+		twoUnsubscribe();
+	} );
+
+	it( 'subscribes to specific selector', () => {
+		registerStore( 'butcher', {
+			reducer( state = { ribs: 6, chicken: 4 }, action ) {
+				switch ( action.type ) {
+					case 'sale':
+						return {
+							...state,
+							[ action.meat ]: state[ action.meat ] / 2,
+						};
+				}
+
+				return state;
+			},
+			selectors: {
+				getPrice: ( state, meat = 'ribs' ) => state[ meat ],
+			},
+			actions: {
+				startSale: ( meat ) => ( { type: 'sale', meat } ),
+			},
+		} );
+
+		const implicitRibsCallback = jest.fn();
+		const ribsCallback = jest.fn();
+		const chickenCallback = jest.fn();
+
+		const implicitRibsUnsubscribe = subscribe( 'butcher', 'getPrice', implicitRibsCallback );
+		const ribsUnsubscribe = subscribe( 'butcher', [ 'getPrice', 'ribs' ], ribsCallback );
+		const chickenUnsubscribe = subscribe( 'butcher', [ 'getPrice', 'chicken' ], chickenCallback );
+
+		dispatch( 'butcher' ).startSale( 'ribs' );
+
+		expect( implicitRibsCallback ).toHaveBeenCalled();
+		expect( ribsCallback ).toHaveBeenCalled();
+		expect( chickenCallback ).not.toHaveBeenCalled();
+
+		implicitRibsUnsubscribe();
+		ribsUnsubscribe();
+		chickenUnsubscribe();
+	} );
 } );
 
 describe( 'dispatch', () => {
