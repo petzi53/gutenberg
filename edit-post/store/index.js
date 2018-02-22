@@ -3,6 +3,7 @@
  */
 import {
 	registerReducer,
+	registerActions,
 	registerSelectors,
 	withRehydratation,
 	loadAndPersist,
@@ -14,7 +15,8 @@ import {
 import reducer from './reducer';
 import enhanceWithBrowserSize from './mobile';
 import { BREAK_MEDIUM } from './constants';
-import { hasFixedToolbar } from './selectors';
+import * as actions from './actions';
+import * as selectors from './selectors';
 
 /**
  * Module Constants
@@ -27,8 +29,7 @@ const store = registerReducer( MODULE_KEY, withRehydratation( reducer, 'preferen
 loadAndPersist( store, reducer, 'preferences', STORAGE_KEY );
 enhanceWithBrowserSize( store, BREAK_MEDIUM );
 
-registerSelectors( MODULE_KEY, {
-	hasFixedToolbar,
-} );
+registerActions( MODULE_KEY, actions );
+registerSelectors( MODULE_KEY, selectors );
 
 export default store;
