@@ -53,23 +53,6 @@ export function preferences( state = PREFERENCES_DEFAULTS, action ) {
 					[ action.panel ]: ! get( state, [ 'panels', action.panel ], false ),
 				},
 			};
-		case 'SET_VIEWPORT_TYPE':
-			return {
-				...state,
-				viewportType: action.viewportType,
-			};
-		case 'UPDATE_MOBILE_STATE':
-			if ( action.isMobile ) {
-				return {
-					...state,
-					viewportType: 'mobile',
-					activeGeneralSidebar: null,
-				};
-			}
-			return {
-				...state,
-				viewportType: 'desktop',
-			};
 		case 'SWITCH_MODE':
 			return {
 				...state,
@@ -111,16 +94,8 @@ export function publishSidebarActive( state = false, action ) {
 	return state;
 }
 
-export function mobile( state = false, action ) {
-	if ( action.type === 'UPDATE_MOBILE_STATE' ) {
-		return action.isMobile;
-	}
-	return state;
-}
-
 export default combineReducers( {
 	preferences,
 	panel,
 	publishSidebarActive,
-	mobile,
 } );
